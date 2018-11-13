@@ -1,0 +1,48 @@
+<script type="text/x-handlebars" data-template-name="/connectors/topic-footer-main-buttons-before-create/defer">
+{{d-button
+  class="btn defer-topic"
+  icon="circle"
+  label="defer_button.defer.title"
+  action="deferTopic"}}
+</script>
+
+<script type="text/discourse-plugin" version="0.1">
+
+const ajax = require("discourse/lib/ajax").ajax;
+const popupAjaxError = require("discourse/lib/ajax-error").popupAjaxError;
+const DiscourseURL = require("discourse/lib/url").default;
+const container = api.container;
+
+I18n.translations.en = I18n.translations.en || {};
+I18n.translations.en.js = I18n.translations.en.js || {};
+I18n.translations.en.js.defer_button = {defer: { title: 'Defer' }};
+
+api.registerConnectorClass(
+  "topic-footer-main-buttons-before-create",
+  "defer", {
+      setupComponent(args) {
+          this.set("topic", args.topic);
+      },
+      shouldRender: function(){
+        const currentUser = container.lookup("current-user:main");
+        return currentUser && currentUser.get('username').toLowerCase() == 'sam';
+      },
+      actions: {
+          deferTopic(){
+              const screenTrack = container.lookup("screen-track:main");
+              const currentUser = container.lookup("current-user:main");
+              screenTrack.reset();
+              screenTrack.stop();
+              const goToPath = this.get('topic.isPrivateMessage') ? currentUser.pmPath(this.get('topic')) : '/';
+              ajax("/t/" + this.get('topic.id') + "/timings.json?last=1", {type: "DELETE"})
+              .then(() => {
+                  const highestSeenByTopic = Discourse.Session.currentProp("highestSeenByTopic");
+                  highestSeenByTopic[this.get('topic.id')] = null;
+                  DiscourseURL.routeTo(goToPath);
+               }).catch(popupAjaxError);
+          }
+      }
+  }
+);
+</script>
+
