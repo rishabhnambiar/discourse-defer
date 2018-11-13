@@ -23,9 +23,18 @@ api.registerConnectorClass(
       setupComponent(args) {
           this.set("topic", args.topic);
       },
-      shouldRender: function(){
+      shouldRender: function(args, component){
         const currentUser = container.lookup("current-user:main");
-        return currentUser && currentUser.get('username').toLowerCase() == 'sam';
+        if (!currentUser) {
+          return false;
+        }
+
+        if (component.get('site.mobileView')) {
+          return false;
+        }
+
+        const username = currentUser.get('username').toLowerCase();
+        return username === 'sam' || username === 'hawk';
       },
       actions: {
           deferTopic(){
