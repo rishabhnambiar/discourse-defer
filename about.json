@@ -1,9 +1,5 @@
 {
   "name": "Defer Button",
-  "about_url": "URL",
-  "license_url": "URL",
-  "assets": {
-  },
-  "color_schemes": {
-  }
+  "about_url": "https://meta.discourse.org",
+  "license_url": "https://github.com/SamSaffron/discourse-defer-button/blob/master/LICENSE.txt"
 }
