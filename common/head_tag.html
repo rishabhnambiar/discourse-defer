@@ -43,7 +43,7 @@ function deferTopic(topic) {
 api
   .modifySelectKit("topic-footer-mobile-dropdown")
   .modifyContent((context, existingContent) => {
-    if (context.get("currentUser.staff")) {
+    if (allowUser(context.get("currentUser"))) {
       existingContent.push({
         id: "defer",
         icon: "circle",
