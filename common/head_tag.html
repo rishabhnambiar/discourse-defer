@@ -17,6 +17,46 @@ I18n.translations.en = I18n.translations.en || {};
 I18n.translations.en.js = I18n.translations.en.js || {};
 I18n.translations.en.js.defer_button = {defer: { title: 'Defer' }};
 
+function allowUser(user) {
+  if (!user) {
+    return false;
+  }
+  const username = user.get('username').toLowerCase();
+  return username === 'sam' || username === 'hawk';
+}
+
+function deferTopic(topic) {
+  const screenTrack = container.lookup("screen-track:main");
+  const currentUser = container.lookup("current-user:main");
+  screenTrack.reset();
+  screenTrack.stop();
+  const goToPath = topic.get('isPrivateMessage') ? currentUser.pmPath(topic) : '/';
+  ajax("/t/" + topic.get('id') + "/timings.json?last=1", {type: "DELETE"})
+  .then(() => {
+      const highestSeenByTopic = Discourse.Session.currentProp("highestSeenByTopic");
+      highestSeenByTopic[topic.get('id')] = null;
+      DiscourseURL.routeTo(goToPath);
+   }).catch(popupAjaxError);
+}
+
+
+api
+  .modifySelectKit("topic-footer-mobile-dropdown")
+  .modifyContent((context, existingContent) => {
+    if (context.get("currentUser.staff")) {
+      existingContent.push({
+        id: "defer",
+        icon: "circle",
+        name: I18n.t("defer_button.defer.title")
+      });
+    }
+    return existingContent;
+  })
+  .onSelect((context, value) => {
+    const topic = context.get("topic");
+    deferTopic(topic);
+  });
+
 api.registerConnectorClass(
   "topic-footer-main-buttons-before-create",
   "defer", {
@@ -33,22 +73,11 @@ api.registerConnectorClass(
           return false;
         }
 
-        const username = currentUser.get('username').toLowerCase();
-        return username === 'sam' || username === 'hawk';
+        return allowUser(currentUser);
       },
       actions: {
           deferTopic(){
-              const screenTrack = container.lookup("screen-track:main");
-              const currentUser = container.lookup("current-user:main");
-              screenTrack.reset();
-              screenTrack.stop();
-              const goToPath = this.get('topic.isPrivateMessage') ? currentUser.pmPath(this.get('topic')) : '/';
-              ajax("/t/" + this.get('topic.id') + "/timings.json?last=1", {type: "DELETE"})
-              .then(() => {
-                  const highestSeenByTopic = Discourse.Session.currentProp("highestSeenByTopic");
-                  highestSeenByTopic[this.get('topic.id')] = null;
-                  DiscourseURL.routeTo(goToPath);
-               }).catch(popupAjaxError);
+            deferTopic(this.get('topic'));
           }
       }
   }
