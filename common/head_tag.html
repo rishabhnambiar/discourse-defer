@@ -53,8 +53,10 @@ api
     return existingContent;
   })
   .onSelect((context, value) => {
-    const topic = context.get("topic");
-    deferTopic(topic);
+    if (value === "defer") {
+      const topic = context.get("topic");
+      deferTopic(topic);
+    }
   });
 
 api.registerConnectorClass(
