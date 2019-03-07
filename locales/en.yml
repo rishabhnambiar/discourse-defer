@@ -1,0 +1,6 @@
+---
+en:
+  defer:
+    enable_defer_button: Enable defer button on topics
+    title: Mark topic as unread
+    label: Defer

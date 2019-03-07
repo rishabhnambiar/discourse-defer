@@ -1,28 +1,29 @@
-<script type="text/x-handlebars" data-template-name="/connectors/topic-footer-main-buttons-before-create/defer">
-{{d-button
-  class="btn defer-topic"
-  icon="circle"
-  label="defer_button.defer.title"
-  action="deferTopic"}}
-</script>
-
 <script type="text/discourse-plugin" version="0.1">
 
 const ajax = require("discourse/lib/ajax").ajax;
 const popupAjaxError = require("discourse/lib/ajax-error").popupAjaxError;
 const DiscourseURL = require("discourse/lib/url").default;
 const container = api.container;
+const currentUser = api.getCurrentUser();
 
-I18n.translations.en = I18n.translations.en || {};
-I18n.translations.en.js = I18n.translations.en.js || {};
-I18n.translations.en.js.defer_button = {defer: { title: 'Defer' }};
+const LocalStorageName = "deferEnabled";
 
-function allowUser(user) {
-  if (!user) {
+function deferEnabled() {
+  let pref = localStorage.getItem(LocalStorageName);
+  let result = settings.default_enabled;
+  if (pref !== null) {
+    result = pref === "true";
+  }
+  return result;
+}
+
+currentUser.enableDeferButton = deferEnabled();
+
+function allowUser() {
+  if (!currentUser) {
     return false;
   }
-  const username = user.get('username').toLowerCase();
-  return username === 'sam' || username === 'hawk';
+  return currentUser.get("enableDeferButton");
 }
 
 function deferTopic(topic) {
@@ -39,50 +40,45 @@ function deferTopic(topic) {
    }).catch(popupAjaxError);
 }
 
-
-api
-  .modifySelectKit("topic-footer-mobile-dropdown")
-  .modifyContent((context, existingContent) => {
-    if (allowUser(context.get("currentUser"))) {
-      existingContent.push({
-        id: "defer",
-        icon: "circle",
-        name: I18n.t("defer_button.defer.title")
-      });
-    }
-    return existingContent;
-  })
-  .onSelect((context, value) => {
-    if (value === "defer") {
-      const topic = context.get("topic");
-      deferTopic(topic);
-    }
-  });
-
-api.registerConnectorClass(
-  "topic-footer-main-buttons-before-create",
-  "defer", {
-      setupComponent(args) {
-          this.set("topic", args.topic);
-      },
-      shouldRender: function(args, component){
-        const currentUser = container.lookup("current-user:main");
-        if (!currentUser) {
-          return false;
-        }
-
-        if (component.get('site.mobileView')) {
-          return false;
-        }
-
-        return allowUser(currentUser);
-      },
-      actions: {
-          deferTopic(){
-            deferTopic(this.get('topic'));
-          }
-      }
+api.registerTopicFooterButton({
+  id: "defer",
+  icon: "circle",
+  priority: 300,
+  label: themePrefix("defer.label"),
+  title: themePrefix("defer.title"),
+  action: function() {
+    deferTopic(this.get("topic"));
+  },
+  displayed: function() {
+    return allowUser();
+  },
+  dropdown: function() {
+    return this.site.mobileView;
   }
-);
+});
+
+
+api.modifyClass("controller:preferences/interface", {
+  actions: {
+    save() {
+      this._super();
+
+      if (this.get("model.username") !== currentUser.get("username")) {
+        return;
+      }
+
+      if(deferEnabled() != this.get("model.enableDeferButton")){
+        Discourse.set("assetVersion", "forceRefresh");
+      }
+      localStorage.setItem(LocalStorageName, this.get("model.enableDeferButton").toString());
+    }
+  }
+});
+
+
+</script>
+
+<script type='text/x-handlebars' data-template-name='/connectors/user-preferences-interface/add-selector'>
+  {{preference-checkbox labelKey=(theme-prefix 'defer.enable_defer_button') checked=model.enableDeferButton}}
 </script>
 
