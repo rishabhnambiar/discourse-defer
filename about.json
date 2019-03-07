@@ -1,6 +1,6 @@
 {
   "name": "Defer Button",
-  "about_url": "https://meta.discourse.org",
+  "about_url": "https://meta.discourse.org/t/defer-topic-button-mark-topic-unread/110951",
   "license_url": "https://github.com/discourse/discourse-defer/blob/master/LICENSE.txt",
   "component": true
 }
