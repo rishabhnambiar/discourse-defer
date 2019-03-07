@@ -19,6 +19,9 @@ function deferEnabled() {
 
 currentUser.enableDeferButton = deferEnabled();
 
+// very hacky, need to think of something cleaner here
+currentUser._isCurrent = true;
+
 function allowUser() {
   if (!currentUser) {
     return false;
@@ -79,6 +82,8 @@ api.modifyClass("controller:preferences/interface", {
 </script>
 
 <script type='text/x-handlebars' data-template-name='/connectors/user-preferences-interface/add-selector'>
+  {{#if model._isCurrent}}
   {{preference-checkbox labelKey=(theme-prefix 'defer.enable_defer_button') checked=model.enableDeferButton}}
+  {{/if}}
 </script>
 
